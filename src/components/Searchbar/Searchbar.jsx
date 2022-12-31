@@ -6,7 +6,8 @@ import { GoSearch } from 'react-icons/go';
 export const Searchbar = ({ onSubmit }) => {
   const handleSubmit = evt => {
     evt.preventDefault();
-    onSubmit(evt.currentTarget.lastChild.value.trim());
+    const query = evt.target.lastChild.value;
+    onSubmit(query.trim());
   };
 
   return (
