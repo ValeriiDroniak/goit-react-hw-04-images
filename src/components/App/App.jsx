@@ -40,7 +40,6 @@ export class App extends Component {
     if (prevState.query !== query || prevState.page !== page) {
       this.setState({ isLoading: true });
 
-      try {
         const imagesData = await API.getImagesData(query, page);
         const images = imagesData.hits.map(
           ({ id, webformatURL, largeImageURL, tags }) => ({
@@ -60,10 +59,7 @@ export class App extends Component {
         if (prevState.query !== query) {
           toast.success(`${imagesData.totalHits} images were found!`);
         }
-      } catch (error) {
-        this.setState({ isLoading: false });
-        toast.error(error.message);
-      }
+     
     }
   }
 
