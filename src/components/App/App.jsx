@@ -63,7 +63,6 @@ export class App extends Component {
       } catch (error) {
         this.setState({ isLoading: false });
         toast.error(error.message);
-        console.log(error);
       }
     }
   }
