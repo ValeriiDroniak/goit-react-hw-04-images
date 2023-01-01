@@ -40,7 +40,7 @@ export class App extends Component {
     if (prevState.query !== query || prevState.page !== page) {
       this.setState({ isLoading: true });
 
-        try {
+      try {
         const imagesData = await API.getImagesData(query, page);
         const images = imagesData.hits.map(
           ({ id, webformatURL, largeImageURL, tags }) => ({
@@ -63,7 +63,6 @@ export class App extends Component {
       } catch (error) {
         this.setState({ isLoading: false });
         toast.error(error.message);
-        console.log(error);
       }
     }
   }
@@ -119,9 +118,6 @@ export class App extends Component {
           aria-label="Loading Spinner"
           speedMultiplier={0.5}
         />
-        {/* {images.length < totalImages && (
-          <Button onClick={this.nextPage}>Load more</Button>
-        )} */}
         <ToastContainer
           position="top-right"
           autoClose={2000}
