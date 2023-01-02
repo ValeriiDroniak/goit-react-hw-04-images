@@ -8,6 +8,7 @@ export const Searchbar = ({ onSubmit }) => {
   const handleSubmit = evt => {
     evt.preventDefault();
     onSubmit(evt.currentTarget.lastChild.value.trim());
+    evt.target.reset();
   };
 
   return (

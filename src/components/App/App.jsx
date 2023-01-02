@@ -23,7 +23,7 @@ const override = {
 export const App = () => {
   const [images, setImages] = useState(() => []);
   const [totalImages, setTotalImages] = useState(0);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState('nature');
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [scrollUp, setScrollUp] = useState(false);
@@ -51,8 +51,16 @@ export const App = () => {
     const manageRequest = async () => {
       setIsLoading(true);
       try {
-        const imagesData = await API.getImagesData(query, page);
-        const images = imagesData.hits.map(
+        const { hits, totalHits } = await API.getImagesData(query, page);
+
+        if (!hits.length) {
+          toast.warning(
+            'Nothing was found for your keyword. Change the keyword and try again.'
+          );
+          return;
+        }
+
+        const images = hits.map(
           ({ id, webformatURL, largeImageURL, tags }) => ({
             id,
             tags,
@@ -62,11 +70,11 @@ export const App = () => {
         );
 
         setImages(state => [...state, ...images]);
-        setTotalImages(imagesData.totalHits);
-        setIsLoading(false);
+        setTotalImages(totalHits);
       } catch (error) {
-        setIsLoading(false);
         toast.error(error.message);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -75,6 +83,7 @@ export const App = () => {
 
   const handleQuery = search => {
     if (search === query || !search) {
+      toast.info('Please enter a keyword to search');
       return;
     }
 
@@ -86,9 +95,7 @@ export const App = () => {
     setScrollUp(false);
   };
 
-  const nextPage = () => {
-    setPage(prevState => prevState + 1);
-  };
+  const nextPage = () => setPage(prevState => prevState + 1);
 
   return (
     <Box display="flex" flexDirection="column" width="100%">
