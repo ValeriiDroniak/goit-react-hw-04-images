@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { BarLoader } from 'react-spinners';
 import { toast, ToastContainer } from 'react-toastify';
 import * as API from 'services/api';
@@ -20,26 +20,36 @@ const override = {
   zIndex: '1500',
 };
 
-export class App extends Component {
-  state = {
-    images: [],
-    totalImages: 0,
-    query: '',
-    page: 1,
-    isLoading: false,
-    scrollUp: false,
-  };
+export const App = () => {
+  const [images, setImages] = useState(() => []);
+  const [totalImages, setTotalImages] = useState(0);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [scrollUp, setScrollUp] = useState(false);
 
-  componentDidMount() {
-    window.addEventListener('scroll', this.onScroll);
-  }
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.scrollY > window.innerHeight) {
+        setScrollUp(true);
+      } else {
+        setScrollUp(false);
+      }
+    };
+    window.addEventListener('scroll', onScroll);
 
-  async componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
-    if (prevState.query !== query || prevState.page !== page) {
-      this.setState({ isLoading: true });
+  useEffect(() => {
+    if (query === '') {
+      return;
+    }
 
+    const manageRequest = async () => {
+      setIsLoading(true);
       try {
         const imagesData = await API.getImagesData(query, page);
         const images = imagesData.hits.map(
@@ -51,87 +61,65 @@ export class App extends Component {
           })
         );
 
-        this.setState(state => ({
-          images: [...state.images, ...images],
-          totalImages: imagesData.totalHits,
-          isLoading: false,
-        }));
-
-        if (prevState.query !== query) {
-          toast.success(`${imagesData.totalHits} images were found!`);
-        }
+        setImages(state => [...state, ...images]);
+        setTotalImages(imagesData.totalHits);
+        setIsLoading(false);
       } catch (error) {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
         toast.error(error.message);
       }
-    }
-  }
+    };
 
-  componentWillUnmount() {
-    window.removeEventListener('scroll', this.onScroll);
-  }
+    manageRequest();
+  }, [page, query]);
 
-  onScroll = () => {
-    if (window.scrollY > window.innerHeight) {
-      this.setState({ scrollUp: true });
-    } else {
-      this.setState({ scrollUp: false });
-    }
-  };
-
-  handleQuery = query => {
-    if (query === this.state.query) {
+  const handleQuery = search => {
+    if (search === query || !search) {
       return;
     }
 
-    this.setState({
-      images: [],
-      totalImages: 0,
-      query,
-      page: 1,
-      isLoading: false,
-      scrollUp: false,
-    });
+    setImages([]);
+    setTotalImages(0);
+    setQuery(search);
+    setPage(1);
+    setIsLoading(false);
+    setScrollUp(false);
   };
 
-  nextPage = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const nextPage = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  render() {
-    const { images, totalImages, isLoading, scrollUp } = this.state;
-
-    return (
-      <Box display="flex" flexDirection="column" width="100%">
-        <Searchbar onSubmit={this.handleQuery} />
-        <Box as="main" overflow="hidden" textAlign="center" mb={5}>
-          <ImageGallery images={images} />
-          {images.length < totalImages && (
-            <Button onClick={this.nextPage}>Load more</Button>
-          )}
-        </Box>
-        <BarLoader
-          cssOverride={override}
-          loading={isLoading}
-          color=" #07bc0c "
-          height={4}
-          aria-label="Loading Spinner"
-          speedMultiplier={0.5}
-        />
-        <ToastContainer
-          position="top-right"
-          autoClose={2000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-        {scrollUp && <ScrollUp onClick={() => scrollTo(0)} />}
+  return (
+    <Box display="flex" flexDirection="column" width="100%">
+      <Searchbar onSubmit={handleQuery} />
+      <Box as="main" overflow="hidden" textAlign="center" mb={5}>
+        <ImageGallery images={images} />
+        {images.length < totalImages && (
+          <Button onClick={nextPage}>Load more</Button>
+        )}
       </Box>
-    );
-  }
-}
+      <BarLoader
+        cssOverride={override}
+        loading={isLoading}
+        color=" #07bc0c "
+        height={4}
+        aria-label="Loading Spinner"
+        speedMultiplier={0.5}
+      />
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      {scrollUp && <ScrollUp onClick={() => scrollTo(0)} />}
+    </Box>
+  );
+};
